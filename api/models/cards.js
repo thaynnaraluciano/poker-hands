@@ -11,6 +11,7 @@ const cardsSchema = mongoose.Schema({
        type: String,
        enum: ["Ouros", "Copas", "Espadas", "Paus"]
     },
+    sequential: Number
 });
 
 module.exports = mongoose.model('Cards', cardsSchema);

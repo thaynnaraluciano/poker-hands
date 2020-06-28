@@ -28,7 +28,7 @@ Resposta:
 ]
 ```
 
-#### POST/ croupier
+#### POST /croupier
 Esta rota recebe duas mãos de poker e retorna a mão vencedora. 
 
 Requisição:

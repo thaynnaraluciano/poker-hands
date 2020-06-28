@@ -1,5 +1,14 @@
 const Card = require('../models/cards');
 
+const STRAIGHT_FLUSH_POINTS = 8;
+const FOUR_OF_A_KIND_POINTS = 7;
+const FULL_HOUSE_POINTS = 6;
+const FLUSH_POINTS = 5;
+const STRAIGHT_POINTS = 4;
+const THREE_OF_A_KIND_POINTS = 3;
+const TWO_PAIRS_POINTS = 2;
+const PAIR_POINTS = 1;
+
 const sortBySequential = hand => {
     return hand.sort((x, y) => {
         if(x.sequential < y.sequential){
@@ -16,14 +25,14 @@ const handClassification = hand => {
     var sortedHand = sortBySequential(hand);
     var occurrences = calculateOccurrences(hand);
 
-    if (isAStraightFlush(sortedHand)) { return 8 }
-    if (isAFourOfAKind(sortedHand, occurrences)) { return 7 }
-    if (isAFullHouse(sortedHand, occurrences)) { return 6 }
-    if (isAFlush(sortedHand)) { return 5 }
-    if (isAStraight(sortedHand)){ return 4 }
-    if (isAThreeOfKind(sortedHand, occurrences)) { return 3 }
-    if (isATwoPairs(sortedHand, occurrences)) {return 2}
-    if (isAPair(sortedHand, occurrences)) { return 1 }
+    if (isAStraightFlush(sortedHand)) { return STRAIGHT_FLUSH_POINTS }
+    if (isAFourOfAKind(sortedHand, occurrences)) { return FOUR_OF_A_KIND_POINTS }
+    if (isAFullHouse(sortedHand, occurrences)) { return FULL_HOUSE_POINTS }
+    if (isAFlush(sortedHand)) { return FLUSH_POINTS }
+    if (isAStraight(sortedHand)){ return STRAIGHT_POINTS }
+    if (isAThreeOfKind(sortedHand, occurrences)) { return THREE_OF_A_KIND_POINTS }
+    if (isATwoPairs(sortedHand, occurrences)) {return TWO_PAIRS_POINTS}
+    if (isAPair(sortedHand, occurrences)) { return PAIR_POINTS }
     return 0;
 }
 
@@ -93,7 +102,7 @@ const tiebreaker = (handOne, handTwo, classification) => {
     var occurrencesHandOne = calculateOccurrences(handOneCopy);
     var occurrencesHandTwo = calculateOccurrences(handTwoCopy);
 
-    if(classification === 1 || classification === 2){
+    if(classification === PAIR_POINTS || classification === TWO_PAIRS_POINTS){
         var sequentialHandOne = occurrencesHandOne.filter(value => value.amount === 2);
         var sequentiallHandTwo = occurrencesHandTwo.filter(value => value.amount === 2);
         var sortedSequentialHandOne = sortBySequential(sequentialHandOne).reverse();
@@ -108,8 +117,8 @@ const tiebreaker = (handOne, handTwo, classification) => {
             }
         }
     }   
-    if(classification === 3 || classification === 4){
-        var amount = classification === 3 ? 3 : 4;
+    if(classification === THREE_OF_A_KIND_POINTS || classification === FOUR_OF_A_KIND_POINTS){
+        var amount = classification === THREE_OF_A_KIND_POINTS ? 3 : 4;
         var sequentialHandOne = occurrencesHandOne.find(value => value.amount === amount).sequential;
         var sequentiallHandTwo = occurrencesHandTwo.find(value => value.amount === amount).sequential;
         if( sequentialHandOne > sequentiallHandTwo){
@@ -119,7 +128,7 @@ const tiebreaker = (handOne, handTwo, classification) => {
             return handTwo;
         }
     }
-    if(classification === 6){
+    if(classification === FULL_HOUSE_POINTS){
         var sequentialThreeOfAKindHandOne = occurrencesHandOne.find(value => value.amount === 3).sequential;
         var sequentialThreeOfAKindHandTwo = occurrencesHandTwo.find(value => value.amount === 3).sequential;
         if(sequentialThreeOfAKindHandOne === sequentialThreeOfAKindHandTwo){

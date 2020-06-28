@@ -4,6 +4,7 @@
   "description": "Teste Music Playce",
   "main": "index.js",
   "scripts": {
+    "seed": "node customScripts/seed.js",
     "start": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,7 +21,8 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "mongoose": "^5.9.20"
+    "mongoose": "^5.9.20",
+    "mongoose-seed": "^0.6.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"

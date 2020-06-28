@@ -9,7 +9,18 @@ Para desenvolvimento da API, foram utilizadas as seguintes tecnologias:
 
 ## Variáveis de ambiente: 
 > < substituir > - O conteúdo entre < > deve ser substituído de acordo com seu ambiente.
-* MONGO_ATLAS_CONNECTION_STRING = < string para conexão com banco de dados MongoDB Atlas > 
+* 'mongodb+srv://'+ MONGO_ATLAS_CONNECTION_STRING = < string para conexão com banco de dados MongoDB Atlas > 
+
+## Populando o banco de dados
+Defina a variável de ambiente com o seguinte comando:
+> < substituir > - O conteúdo entre < > deve ser substituído de acordo com seu ambiente.
+```
+export MONGO_ATLAS_CONNECTION_STRING=< string para conexão com banco de dados MongoDB Atlas >
+```
+Para popular o banco de dados em seu ambiente, foi criado um script que pode ser executado com o seguinte comando:
+```
+npm run seed
+```
 
 ## REST API Endpoints
 #### GET /cards

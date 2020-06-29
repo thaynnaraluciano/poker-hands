@@ -1,4 +1,5 @@
 const Card = require('../models/cards');
+const Hand = require('../models/hands');
 
 const STRAIGHT_FLUSH_POINTS = 8;
 const FOUR_OF_A_KIND_POINTS = 7;
@@ -9,8 +10,8 @@ const THREE_OF_A_KIND_POINTS = 3;
 const TWO_PAIRS_POINTS = 2;
 const PAIR_POINTS = 1;
 
-const sortBySequential = hand => {
-    return hand.sort((x, y) => {
+const sortBySequential = sequentialHand => {
+    return sequentialHand.sort((x, y) => {
         if(x.sequential < y.sequential){
             return -1
         }
@@ -21,86 +22,9 @@ const sortBySequential = hand => {
     });
 }
 
-const handClassification = hand => {
-    var sortedHand = sortBySequential(hand);
-    var occurrences = calculateOccurrences(hand);
-
-    if (isAStraightFlush(sortedHand)) { return STRAIGHT_FLUSH_POINTS }
-    if (isAFourOfAKind(sortedHand, occurrences)) { return FOUR_OF_A_KIND_POINTS }
-    if (isAFullHouse(sortedHand, occurrences)) { return FULL_HOUSE_POINTS }
-    if (isAFlush(sortedHand)) { return FLUSH_POINTS }
-    if (isAStraight(sortedHand)){ return STRAIGHT_POINTS }
-    if (isAThreeOfKind(sortedHand, occurrences)) { return THREE_OF_A_KIND_POINTS }
-    if (isATwoPairs(sortedHand, occurrences)) {return TWO_PAIRS_POINTS}
-    if (isAPair(sortedHand, occurrences)) { return PAIR_POINTS }
-    return 0;
-}
-
-const calculateOccurrences = hand => {
-    var aux = [];
-    hand.forEach(card => {
-        var occurrence = aux.find(value => value.sequential === card.sequential);
-        if (occurrence === undefined){
-            aux.push({sequential: card.sequential, amount: 1});
-        }
-        else{
-            occurrence.amount++;
-        }
-    });
-    return aux;
-}
-
-const isAStraightFlush = hand => {
-    return isAStraight(hand) && isAFlush(hand);
-}
-
-const isAStraight = hand => {
-    for (var i = 0; i < 4; i++){
-        if (hand[i+1].sequential - hand[i].sequential != 1){
-            if (i === 3 && hand[0].sequential === 2 && hand[4].sequential === 14){
-                return true;
-            }
-            return false;
-        }
-    }
-    return true;
-}
-
-const isAFlush = hand => {
-    var suit = hand[0].suit;
-    for(var i = 1; i < 5; i++){
-        if(hand[i].suit != suit){
-            return false
-        }
-    }
-    return true;
-}
-
-const isAFourOfAKind = (hand, occurrences) => {
-    return occurrences.find(occurrence => occurrence.amount === 4) != undefined;
-}
-
-const isAThreeOfKind = (hand, occurrences) => {
-    return occurrences.find(occurrence => occurrence.amount === 3) != undefined;
-}
-
-var isAPair = (hand, occurrences) => {
-    return occurrences.find(occurrence => occurrence.amount === 2) != undefined;
-}
-
-var isAFullHouse = (hand, occurrences) => {
-    return isAPair(hand, occurrences) && isAThreeOfKind(hand, occurrences);
-}
-
-var isATwoPairs = (hand, occurrences) => {
-    return occurrences.filter(occurrence => occurrence.amount === 2).length === 2;
-}
-
 const tiebreaker = (handOne, handTwo, classification) => {
-    var handOneCopy = JSON.parse(JSON.stringify(handOne));
-    var handTwoCopy = JSON.parse(JSON.stringify(handTwo));
-    var occurrencesHandOne = calculateOccurrences(handOneCopy);
-    var occurrencesHandTwo = calculateOccurrences(handTwoCopy);
+    var occurrencesHandOne = handOne.occurrences();
+    var occurrencesHandTwo = handTwo.occurrences();
 
     if(classification === PAIR_POINTS || classification === TWO_PAIRS_POINTS){
         var sequentialHandOne = occurrencesHandOne.filter(value => value.amount === 2);
@@ -150,10 +74,12 @@ const tiebreaker = (handOne, handTwo, classification) => {
             }
         }
     }
+    var handOneCopy = new Hand([...handOne.cards]);
+    var handTwoCopy = new Hand([...handTwo.cards]);
 
     for(var i = 0; i < 5; i++){
-        var biggestCardHandOne = biggestCard(handOneCopy, classification);
-        var biggestCardHandTwo = biggestCard(handTwoCopy, classification);
+        var biggestCardHandOne = handOneCopy.biggestCard();
+        var biggestCardHandTwo = handTwoCopy.biggestCard();
         if(biggestCardHandOne.sequential > biggestCardHandTwo.sequential){
             return handOne;
         }
@@ -161,22 +87,11 @@ const tiebreaker = (handOne, handTwo, classification) => {
             return handTwo;
         }
         else{
-            handOneCopy.pop();
-            handTwoCopy.pop();
+            handOneCopy.cards.pop();
+            handTwoCopy.cards.pop();
         }
     }
     return null;
-}
-
-const biggestCard = (hand, classification) => {
-    if(hand.length === 1) { return hand[0]}
-    var biggest = hand[hand.length -1];
-    if(biggest.sequential === 14 && (classification === 4 || classification === 8 )){
-        if(hand[hand.length -2].sequential === hand.length){
-            return hand[hand.length -2];
-        }
-    }
-    return biggest;
 }
 
 exports.compareHands = async (req, res) => {
@@ -184,10 +99,10 @@ exports.compareHands = async (req, res) => {
         Card.find().where('_id').in(req.body.hands[0]).exec(), 
         Card.find().where('_id').in(req.body.hands[1]).exec()
     ]).then((hands) => { 
-        var handOne = hands[0];
-        var handTwo = hands[1];
-        var handOneClassification = handClassification(handOne);
-        var handTwoClassification = handClassification(handTwo);  
+        var handOne = new Hand(hands[0]);
+        var handTwo = new Hand(hands[1]);
+        var handOneClassification = handOne.classification;
+        var handTwoClassification = handTwo.classification;  
 
         if(handOneClassification > handTwoClassification){
             res.status(200).json(handOne);
